@@ -17,13 +17,12 @@ class YnetSpider(scrapy.Spider):
 
     def parse_article(self, response):
         # extract the article content
-        article_content = response.css('div.article-body')[0].get()
+        # article_content = response.css('div.article-body')[0].get()
         # extract the URL and use it to construct the filename
         url = response.url
         filename = f'{url.split("/")[-1]}.html'
         # write the content to a file with the unique filename
-        with open(filename, 'w', encoding='utf-8') as f:
-            f.write(article_content)
+        Path(filename).write_bytes(response.body)
 
         # title = response.css('h1.articleTitle::text').get()
         # filename = f'ynet-{title}.html'
