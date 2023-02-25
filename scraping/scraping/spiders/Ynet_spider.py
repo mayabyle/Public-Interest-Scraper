@@ -1,40 +1,37 @@
 from pathlib import Path
-
+from datetime import datetime, date, timedelta
 import scrapy
+
+# tags = ["המהפכה המשפטית"]
+tags = ["המהפכה המשפטית", "עילת הסבירות", "חוקה",
+        "ביבי", "בנימין נתניהו", "עילת הסבירות", "הוועדה למינוי שופטים",
+        "חוקים", "פסקת ההתגברות", "יריב לוין", "חוק דרעי",
+        "רפורמה", "שמחה רוטמן", "זכויות נשים", "אפליה"]
+urls = []
+for tag in tags:
+    urls.append(f'https://ynet.co.il/topics/{tag}')
 
 
 class YnetSpider(scrapy.Spider):
     name = "Ynet"
-    start_urls = ['https://www.ynet.co.il/topics/המהפכה_המשפטית']
+    allowed_domains = ['www.ynet.co.il']
+    start_urls = urls
 
-    # Scrapy’s default callback method
     def parse(self, response):
-        article_list = response.css('div.slotView')
-        # xpath() method used to extract the href attribute of the link within the div element with class="slotTitle"
-        links = article_list.xpath('.//div[@class="slotTitle"]/a/@href')
-        for link in links:
-            yield response.follow(link, callback=self.parse_article)
+        links = response.xpath('.//div[@class="slotTitle"]/a/@href')
+        dates = response.xpath('.//span[@class="dateView"]/text()')
+        for i in range(len(links)):
+            parsed_date = datetime.strptime(dates[i].get().strip(), '%d.%m.%y').date()
+            delta = date.today() - parsed_date
+            if delta > timedelta(days=3):
+                break
+            yield response.follow(links[i], callback=self.parse_article)
+
+        next_page = response.xpath('.//div[@class="linksSwitchPageNum"]/a/@href').get()
+        if next_page is not None:
+            yield response.follow(next_page, callback=self.parse)
 
     def parse_article(self, response):
-        # extract the article content
-        # article_content = response.css('div.article-body')[0].get()
-        # extract the URL and use it to construct the filename
         url = response.url
         filename = f'{url.split("/")[-1]}.html'
-        # write the content to a file with the unique filename
         Path(filename).write_bytes(response.body)
-
-        # title = response.css('h1.articleTitle::text').get()
-        # filename = f'ynet-{title}.html'
-        # Path(filename).write_bytes(response.body)
-
-#
-#
-# from pathlib import Path
-#
-# import scrapy
-#
-# tags = ["המהפכה המשפטית", "עילת הסבירות", ""]
-#         # "", "", "", "", "", "",
-#         # "", "", "", "", "", "", "", "", "", "", "",
-#         # "", "", "", "", "", ""]
