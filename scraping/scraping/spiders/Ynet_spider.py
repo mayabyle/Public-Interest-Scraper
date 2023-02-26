@@ -1,12 +1,14 @@
 from pathlib import Path
 from datetime import datetime, date, timedelta
+import re
+
 import scrapy
 
-# tags = ["המהפכה המשפטית"]
-tags = ["המהפכה המשפטית", "עילת הסבירות", "חוקה",
-        "ביבי", "בנימין נתניהו", "עילת הסבירות", "הוועדה למינוי שופטים",
-        "חוקים", "פסקת ההתגברות", "יריב לוין", "חוק דרעי",
-        "רפורמה", "שמחה רוטמן", "זכויות נשים", "אפליה"]
+tags = ["המהפכה המשפטית"]
+# tags = ["המהפכה המשפטית", "עילת הסבירות", "חוקה",
+#         "ביבי", "בנימין נתניהו", "עילת הסבירות", "הוועדה למינוי שופטים",
+#         "חוקים", "פסקת ההתגברות", "יריב לוין", "חוק דרעי",
+#         "רפורמה", "שמחה רוטמן", "זכויות נשים", "אפליה"]
 urls = []
 for tag in tags:
     urls.append(f'https://ynet.co.il/topics/{tag}')
@@ -23,7 +25,7 @@ class YnetSpider(scrapy.Spider):
         for i in range(len(links)):
             parsed_date = datetime.strptime(dates[i].get().strip(), '%d.%m.%y').date()
             delta = date.today() - parsed_date
-            if delta > timedelta(days=3):
+            if delta > timedelta(days=1):
                 break
             yield response.follow(links[i], callback=self.parse_article)
 
@@ -32,6 +34,10 @@ class YnetSpider(scrapy.Spider):
             yield response.follow(next_page, callback=self.parse)
 
     def parse_article(self, response):
-        url = response.url
-        filename = f'{url.split("/")[-1]}.html'
-        Path(filename).write_bytes(response.body)
+        comments = response.css('div.commentInfoText::text').get()
+        yield {
+            'url': response.url,
+            'headline': response.css('h1.mainTitle::text').get(),
+            'date': response.xpath('//span[@class="DateDisplay"]/@data-wcmdate').extract_first()[:10],
+            'comments': re.search(r'\d+', comments).group(),
+        }
