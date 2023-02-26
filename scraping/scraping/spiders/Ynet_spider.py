@@ -4,6 +4,8 @@ import re
 
 import scrapy
 
+from ..items import ScrapingItem
+
 tags = ["המהפכה המשפטית"]
 # tags = ["המהפכה המשפטית", "עילת הסבירות", "חוקה",
 #         "ביבי", "בנימין נתניהו", "עילת הסבירות", "הוועדה למינוי שופטים",
@@ -34,10 +36,11 @@ class YnetSpider(scrapy.Spider):
             yield response.follow(next_page, callback=self.parse)
 
     def parse_article(self, response):
-        comments = response.css('div.commentInfoText::text').get()
-        yield {
-            'url': response.url,
-            'headline': response.css('h1.mainTitle::text').get(),
-            'date': response.xpath('//span[@class="DateDisplay"]/@data-wcmdate').extract_first()[:10],
-            'comments': re.search(r'\d+', comments).group(),
-        }
+        item = ScrapingItem()
+        comments = re.search(r'\d+', response.css('div.commentInfoText::text').get())
+        # comments_num = comments.group() if comments is not None else 0
+        item['url'] = response.url
+        item['title'] = response.css('h1.mainTitle::text').get()
+        item['date'] = response.xpath('//span[@class="DateDisplay"]/@data-wcmdate').extract_first()[:10]
+        item['comments'] = comments.group() if comments is not None else 0
+        yield item
