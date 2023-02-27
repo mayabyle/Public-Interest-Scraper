@@ -6,3 +6,4 @@ class ScrapingItem(Item):
     title = Field()
     date = Field()
     comments = Field()
+    tags = Field()

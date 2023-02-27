@@ -1,16 +1,15 @@
 from pathlib import Path
 from datetime import datetime, date, timedelta
 import re
-
 import scrapy
-
 from ..items import ScrapingItem
 
-tags = ["המהפכה המשפטית"]
-# tags = ["המהפכה המשפטית", "עילת הסבירות", "חוקה",
-#         "ביבי", "בנימין נתניהו", "עילת הסבירות", "הוועדה למינוי שופטים",
-#         "חוקים", "פסקת ההתגברות", "יריב לוין", "חוק דרעי",
-#         "רפורמה", "שמחה רוטמן", "זכויות נשים", "אפליה"]
+# tags = ["המהפכה המשפטית"]
+tags = ["המהפכה המשפטית", "עילת הסבירות", "חוקה",
+        "ביבי", "בנימין נתניהו", "עילת הסבירות", "הוועדה למינוי שופטים",
+        "חוקים", "פסקת ההתגברות", "יריב לוין", "חוק דרעי",
+        "שופטים", "הספרייה הלאומית",
+        "רפורמה", "שמחה רוטמן", "זכויות נשים", "אפליה"]
 urls = []
 for tag in tags:
     urls.append(f'https://ynet.co.il/topics/{tag}')
@@ -27,7 +26,7 @@ class YnetSpider(scrapy.Spider):
         for i in range(len(links)):
             parsed_date = datetime.strptime(dates[i].get().strip(), '%d.%m.%y').date()
             delta = date.today() - parsed_date
-            if delta > timedelta(days=1):
+            if delta > timedelta(days=4):
                 break
             yield response.follow(links[i], callback=self.parse_article)
 
@@ -38,9 +37,9 @@ class YnetSpider(scrapy.Spider):
     def parse_article(self, response):
         item = ScrapingItem()
         comments = re.search(r'\d+', response.css('div.commentInfoText::text').get())
-        # comments_num = comments.group() if comments is not None else 0
         item['url'] = response.url
         item['title'] = response.css('h1.mainTitle::text').get()
         item['date'] = response.xpath('//span[@class="DateDisplay"]/@data-wcmdate').extract_first()[:10]
         item['comments'] = comments.group() if comments is not None else 0
+        item['tags'] = response.xpath('//div[@class="tagName"]/a/text()').getall()
         yield item

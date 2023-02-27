@@ -69,7 +69,8 @@ DOWNLOAD_DELAY = 3
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   "scraping.pipelines.ScrapingPipeline": 300,
+   # "scraping.pipelines.ynet_pipeline.ScrapingPipeline": 300,
+   "scraping.pipelines.ynet_pipeline.SqliteNoDuplicatesPipeline": 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
