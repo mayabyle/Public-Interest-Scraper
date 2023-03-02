@@ -1,6 +1,8 @@
 import sqlite3
 import matplotlib.pyplot as plt
 from tabulate import tabulate
+from collections import defaultdict
+
 
 class db_reader:
 
@@ -35,8 +37,8 @@ class db_reader:
     def run(self):
         conn = sqlite3.connect('scraping/scraping/ynet.db')
         curr = conn.cursor()
-        avg = curr.execute("""SELECT AVG(comments) FROM ynet""")
-        print(avg.fetchall())
-        # self.get_top_commented_titles(curr, 10)
+        # avg = curr.execute("""SELECT AVG(comments) FROM ynet""")
+        # print(avg.fetchall())
+        self.get_top_commented_titles(curr, 10)
         # self.get_tags_num(curr)
         conn.close()

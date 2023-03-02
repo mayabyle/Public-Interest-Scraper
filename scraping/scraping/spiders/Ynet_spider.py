@@ -1,15 +1,17 @@
-from pathlib import Path
-from datetime import datetime, date, timedelta
-import re
 import scrapy
+import json
+import re
+import requests
+from datetime import datetime, date, timedelta
+from scrapy.utils.project import get_project_settings
 from ..items import ScrapingItem
 
-# tags = ["המהפכה המשפטית"]
-tags = ["המהפכה המשפטית", "עילת הסבירות", "חוקה",
-        "ביבי", "בנימין נתניהו", "עילת הסבירות", "הוועדה למינוי שופטים",
-        "חוקים", "פסקת ההתגברות", "יריב לוין", "חוק דרעי",
-        "שופטים", "הספרייה הלאומית",
-        "רפורמה", "שמחה רוטמן", "זכויות נשים", "אפליה"]
+tags = ["איתמר בן גביר"]
+# tags = ["המהפכה המשפטית", "עילת הסבירות", "חוקה",
+#         "ביבי", "בנימין נתניהו", "עילת הסבירות", "הוועדה למינוי שופטים",
+#         "חוקים", "פסקת ההתגברות", "יריב לוין", "חוק דרעי",
+#         "שופטים", "הספרייה הלאומית", "הפגנה",
+#         "רפורמה", "שמחה רוטמן", "זכויות נשים", "אפליה"]
 urls = []
 for tag in tags:
     urls.append(f'https://ynet.co.il/topics/{tag}')
@@ -26,7 +28,7 @@ class YnetSpider(scrapy.Spider):
         for i in range(len(links)):
             parsed_date = datetime.strptime(dates[i].get().strip(), '%d.%m.%y').date()
             delta = date.today() - parsed_date
-            if delta > timedelta(days=4):
+            if delta > timedelta(days=0):
                 break
             yield response.follow(links[i], callback=self.parse_article)
 
@@ -40,6 +42,28 @@ class YnetSpider(scrapy.Spider):
         item['url'] = response.url
         item['title'] = response.css('h1.mainTitle::text').get()
         item['date'] = response.xpath('//span[@class="DateDisplay"]/@data-wcmdate').extract_first()[:10]
-        item['comments'] = comments.group() if comments is not None else 0
         item['tags'] = response.xpath('//div[@class="tagName"]/a/text()').getall()
+        item['comments_num'] = comments.group() if comments is not None else 0
+        if item['comments_num'] != 0:
+            item['comments'] = self.load_comments(response)
         yield item
+
+    def load_comments(self, response):
+        i = 1
+        comments = []
+        unique_name = response.url.split("/")[-1]
+        headers = get_project_settings().get('DEFAULT_YNET_REQUEST_HEADERS').copy()  # Copy default headers
+        headers['Referer'] = response.url
+
+        while True:
+            url = f"https://www.ynet.co.il/iphone/json/api/talkbacks/list/{unique_name}/end_to_start/{i}"
+            r = requests.get(url, headers=headers)
+            data = json.loads(r.content)
+            comment_list = data['rss']['channel']['item']
+            if len(comment_list) == 0:
+                break
+            for comment in comment_list:
+                comments.append(comment)
+            i = i+1
+        return comments
+

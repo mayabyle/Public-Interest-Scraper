@@ -5,5 +5,6 @@ class ScrapingItem(Item):
     url = Field()
     title = Field()
     date = Field()
-    comments = Field()
     tags = Field()
+    comments_num = Field()
+    comments = Field()
