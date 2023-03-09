@@ -6,12 +6,9 @@ from datetime import datetime, date, timedelta
 from scrapy.utils.project import get_project_settings
 from ..items import ScrapingItem
 
-tags = ["איתמר בן גביר"]
-# tags = ["המהפכה המשפטית", "עילת הסבירות", "חוקה",
-#         "ביבי", "בנימין נתניהו", "עילת הסבירות", "הוועדה למינוי שופטים",
-#         "חוקים", "פסקת ההתגברות", "יריב לוין", "חוק דרעי",
-#         "שופטים", "הספרייה הלאומית", "הפגנה",
-#         "רפורמה", "שמחה רוטמן", "זכויות נשים", "אפליה"]
+# tags = ["המהפכה המשפטית"]
+with open('C:/CS Studies/scraptingProject/scraping/tags.txt', 'r', encoding='utf-8') as f:
+    tags = f.readlines()
 urls = []
 for tag in tags:
     urls.append(f'https://ynet.co.il/topics/{tag}')
@@ -28,7 +25,7 @@ class YnetSpider(scrapy.Spider):
         for i in range(len(links)):
             parsed_date = datetime.strptime(dates[i].get().strip(), '%d.%m.%y').date()
             delta = date.today() - parsed_date
-            if delta > timedelta(days=0):
+            if delta > timedelta(days=5):
                 break
             yield response.follow(links[i], callback=self.parse_article)
 
@@ -39,6 +36,7 @@ class YnetSpider(scrapy.Spider):
     def parse_article(self, response):
         item = ScrapingItem()
         comments = re.search(r'\d+', response.css('div.commentInfoText::text').get())
+        item['source'] = 'Ynet'
         item['url'] = response.url
         item['title'] = response.css('h1.mainTitle::text').get()
         item['date'] = response.xpath('//span[@class="DateDisplay"]/@data-wcmdate').extract_first()[:10]

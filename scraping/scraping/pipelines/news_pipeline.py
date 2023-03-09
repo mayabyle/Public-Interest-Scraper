@@ -5,12 +5,13 @@ import sqlite3
 class SqliteNoDuplicatesPipeline:
 
     def __init__(self):
-        self.conn = sqlite3.connect('ynet.db')
+        self.conn = sqlite3.connect('news.db')
         self.curr = self.conn.cursor()
         self.create_tables()
 
     def create_tables(self):
-        self.curr.execute("""CREATE TABLE IF NOT EXISTS ynet(
+        self.curr.execute("""CREATE TABLE IF NOT EXISTS articles(
+                    source      TEXT,
                     url         TEXT        PRIMARY KEY,
                     title       TEXT,
                     date        TEXT,
@@ -31,12 +32,13 @@ class SqliteNoDuplicatesPipeline:
                             )""")
 
     def process_item(self, item, spider):
-        self.curr.execute("select * from ynet where url = ?", (item['url'],))
+        self.curr.execute("select * from articles where url = ?", (item['url'],))
         result = self.curr.fetchone()
         if result:
             spider.logger.warn("Item already in database: %s" % item['title'])
         else:
-            self.curr.execute("""INSERT INTO ynet (url, title, date, comments, tags) VALUES (?,?,?,?,?)""", (
+            self.curr.execute("""INSERT INTO articles (source, url, title, date, comments, tags) VALUES (?,?,?,?,?,?)""", (
+                item['source'],
                 item['url'],
                 item['title'],
                 item['date'],
