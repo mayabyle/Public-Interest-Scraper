@@ -13,7 +13,7 @@ class N12Spider(scrapy.Spider):
 
     def start_requests(self):
         for url in self.start_urls:
-            yield SplashRequest(url, self.parse, args={'wait': 0.5})
+            yield SplashRequest(url, callback=self.parse, endpoint='render.html', args={'wait': 0.5})
 
     def parse(self, response):
         continue_page = True
@@ -28,7 +28,8 @@ class N12Spider(scrapy.Spider):
             if delta > timedelta(days=0):
                 continue_page = False
                 continue
-            yield response.follow(links[i], callback=self.parse_article)
+            links[i] = "http://www.mako.co.il"+links[i]
+            yield SplashRequest(links[i], callback=self.parse_article, endpoint='render.html', args={'wait': 1})
 
         next_page = response.css('a.next::attr(href)').get()
         script = """function main(splash)
