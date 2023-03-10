@@ -32,10 +32,6 @@ class N12Spider(scrapy.Spider):
             yield SplashRequest(links[i], callback=self.parse_article, endpoint='render.html', args={'wait': 1})
 
         next_page = response.css('a.next::attr(href)').get()
-        script = """function main(splash)
-                    assert(splash:go(splash.args.url))
-                    splash:wait(0.3)
-                    button= splash:select("a[class=next]")"""
         if next_page is not None and continue_page:
             yield response.follow(next_page, callback=self.parse, endpoint='render.html')
 
