@@ -1,5 +1,6 @@
 from itemadapter import ItemAdapter
 import sqlite3
+from ..items import ArticleItem, TagItem
 
 
 class SqliteNoDuplicatesPipeline:
@@ -12,15 +13,18 @@ class SqliteNoDuplicatesPipeline:
     def create_tables(self):
         self.curr.execute("""CREATE TABLE IF NOT EXISTS articles(
                     source      TEXT,
+                    subject     TEXT,
                     url         TEXT        PRIMARY KEY,
                     title       TEXT,
-                    date        TEXT,
+                    date        DATE,
                     comments    INTEGER,
                     tags        TEXT
                     )""")
-        self.curr.execute("""CREATE TABLE IF NOT EXISTS ynet_tags(
-                    title       TEXT,
-                    tag         TEXT
+        self.curr.execute("""CREATE TABLE IF NOT EXISTS tags(
+                    url         TEXT,
+                    date        DATE,
+                    tag         TEXT,
+                    UNIQUE(url, tag)
                     )""")
         self.curr.execute("""CREATE TABLE IF NOT EXISTS ynet_comments(
                             id                  INTEGER,
@@ -32,31 +36,41 @@ class SqliteNoDuplicatesPipeline:
                             )""")
 
     def process_item(self, item, spider):
-        self.curr.execute("select * from articles where url = ?", (item['url'],))
-        result = self.curr.fetchone()
-        if result:
-            spider.logger.warn("Item already in database: %s" % item['title'])
-        else:
-            self.curr.execute("""INSERT INTO articles (source, url, title, date, comments, tags) VALUES (?,?,?,?,?,?)""", (
-                item['source'],
-                item['url'],
-                item['title'],
-                item['date'],
-                item['comments_num'],
-                ', '.join(item['tags'])))
+        if isinstance(item, ArticleItem):
+            self.curr.execute("select * from articles where url = ?", (item['url'],))
+            result = self.curr.fetchone()
+            if result:
+                spider.logger.warn("Item already in database: %s" % item['title'])
+            else:
+                self.curr.execute("""INSERT INTO articles (source, subject, url, title, date, comments, tags)
+                                    VALUES (?,?,?,?,?,?,?)""", (
+                    item['source'],
+                    item['subject'],
+                    item['url'],
+                    item['title'],
+                    item['date'],
+                    item['comments_num'],
+                    ', '.join(item['tags'])))
 
-            for tag in item['tags']:
-                self.curr.execute("INSERT INTO ynet_tags (title, tag) VALUES (?,?)",
-                                  (item['title'], tag))
+                for tag in item['tags']:
+                    self.curr.execute("INSERT OR IGNORE INTO tags (url, date, tag) VALUES (?,?,?)",
+                                      (item['url'], item['date'], tag))
 
-            for comment in item['comments']:
-                self.curr.execute("""INSERT INTO ynet_comments (id, article_title, comment_headline, comment_text, likes, unlikes)
-                                  VALUES (?,?,?,?,?,?)""",
-                                  (comment['id'],
-                                   item['title'],
-                                   comment['title'],
-                                   comment['text'],
-                                   comment['likes'],
-                                   comment['unlikes']))
+                for comment in item['comments']:
+                    self.curr.execute("""INSERT INTO ynet_comments (id, article_title, comment_headline, comment_text, likes, unlikes)
+                                      VALUES (?,?,?,?,?,?)""",
+                                      (comment['id'],
+                                       item['title'],
+                                       comment['title'],
+                                       comment['text'],
+                                       comment['likes'],
+                                       comment['unlikes']))
+                self.conn.commit()
+
+        if isinstance(item, TagItem):
+            self.curr.execute(
+                "INSERT OR IGNORE INTO tags (url, date, tag) VALUES (?,?,?)",
+                (item['url'], item['date'], item['search_tag']))
             self.conn.commit()
+
         return item

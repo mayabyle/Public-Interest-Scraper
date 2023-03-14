@@ -4,7 +4,7 @@ import re
 import requests
 from datetime import datetime, date, timedelta
 from scrapy.utils.project import get_project_settings
-from ..items import ScrapingItem
+from ..items import ArticleItem
 
 tags = ["פוליטיקה"]
 # with open('C:/CS Studies/scraptingProject/scraping/tags.txt', 'r', encoding='utf-8') as f:

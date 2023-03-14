@@ -1,9 +1,8 @@
-from webbrowser import Chrome
 
 import scrapy
 from datetime import datetime, date, timedelta
 from scrapy.utils.project import get_project_settings
-from ..items import ScrapingItem
+from ..items import ArticleItem
 from scrapy_splash import SplashRequest
 
 
@@ -29,15 +28,16 @@ class N12Spider(scrapy.Spider):
                 continue_page = False
                 continue
             links[i] = "http://www.mako.co.il"+links[i]
-            yield SplashRequest(links[i], callback=self.parse_article, endpoint='render.html', args={'wait': 1})
+            yield SplashRequest(links[i], callback=self.parse_article, endpoint='render.html', args={'wait': 0.5})
 
         next_page = response.css('a.next::attr(href)').get()
         if next_page is not None and continue_page:
             yield response.follow(next_page, callback=self.parse, endpoint='render.html')
 
     def parse_article(self, response):
-        item = ScrapingItem()
+        item = ArticleItem()
         item['source'] = 'N12'
+        item['subject'] = response.css('span[itemprop="name"]::text')[-1].get()
         item['url'] = response.url
         item['title'] = response.css('h1::text').get()
         item['date'] = response.css('span.display-date span:nth-child(1)::text').extract_first()[8:]
