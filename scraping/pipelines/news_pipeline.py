@@ -1,6 +1,5 @@
-from itemadapter import ItemAdapter
 import sqlite3
-from ..items import ArticleItem, TagItem
+from scraping.items import ArticleItem, TagItem
 
 
 class SqliteNoDuplicatesPipeline:

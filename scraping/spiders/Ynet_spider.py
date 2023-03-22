@@ -1,14 +1,13 @@
-import urllib, scrapy, json, re, requests
+import urllib, scrapy, json, requests
 
-from datetime import datetime, date, timedelta
+from datetime import datetime
 from scrapy.utils.project import get_project_settings
-from scrapy_splash import SplashRequest
 
-from ..items import ArticleItem, TagItem
+from scraping.items import ArticleItem, TagItem
 
 
 # tags = ["המהפכה המשפטית"]
-with open('C:/CS Studies/scraptingProject/scraping/tags.txt', 'r', encoding='utf-8') as f:
+with open('tags.txt', 'r', encoding='utf-8') as f:
     tags = f.readlines()
 urls = []
 for tag in tags:

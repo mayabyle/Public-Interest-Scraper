@@ -5,7 +5,6 @@ import time
 import requests
 from collections import defaultdict
 
-
 stop_words = set(stopwords.words('hebrew'))
 lemmas_count = defaultdict(int)
 
@@ -35,12 +34,11 @@ def get_most_common_words_from_comments(curr, num):
                 time.sleep(1)
     print(lemmas_count)
 
-
 # word_counts = (df['comment_text'].str.split(expand=True)  # split into words
-    #                     .stack()  # stack the resulting columns
-    #                     .apply(lambda x: x.strip())  # strip whitespace from each word
-    #                     .where(lambda x: ~x.isin(stop_words))  # exclude stop words
-    #                     .dropna()  # drop null values
-    #                     .value_counts()  # count the occurrences of each word
-    #                     .idxmax())  # get the index of the maximum value (i.e., the most common word)
-    # print(word_counts)
+#                     .stack()  # stack the resulting columns
+#                     .apply(lambda x: x.strip())  # strip whitespace from each word
+#                     .where(lambda x: ~x.isin(stop_words))  # exclude stop words
+#                     .dropna()  # drop null values
+#                     .value_counts()  # count the occurrences of each word
+#                     .idxmax())  # get the index of the maximum value (i.e., the most common word)
+# print(word_counts)

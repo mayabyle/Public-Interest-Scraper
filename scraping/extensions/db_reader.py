@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 # import hebrew_parser
 from tabulate import tabulate
 
-from scraping.scraping.extensions import hebrew_parser
+from scraping.extensions import hebrew_parser
 
 
 def plot_topics_division(curr):

@@ -1,7 +1,7 @@
 import scrapy
 
 from datetime import datetime, date, timedelta
-from ..items import ArticleItem
+from scraping.items import ArticleItem
 from scrapy_splash import SplashRequest
 
 
