@@ -12,7 +12,7 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Chrome
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
 
-DEFAULT_YNET_REQUEST_HEADERS = sh.get_dict('''
+YNET_COMMENTS_REQUEST_HEADERS = sh.get_dict('''
    accept: application/json, text/plain, */*,
    accept-language: he-IL,he;q=0.9,en-US;q=0.8,en;q=0.7,
    cache-control: no-cache,
@@ -29,21 +29,36 @@ DEFAULT_YNET_REQUEST_HEADERS = sh.get_dict('''
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   "scraping.pipelines.news_pipeline.SqliteNoDuplicatesPipeline": 300,
+    "scraping.pipelines.news_pipeline.SqliteNoDuplicatesPipeline": 300,
 }
 
 # Splash setup
 SPLASH_URL = 'http://localhost:8050'
+# SPLASH_URL = 'http://192.168.59.103:8050'
+# SPLASH_URL = 'http://0.0.0.0:8050'
+SPLASH_TIMEOUT = 180
+CONCURRENT_REQUESTS = 3
+
 DOWNLOADER_MIDDLEWARES = {
     'scrapy_splash.SplashCookiesMiddleware': 723,
     'scrapy_splash.SplashMiddleware': 725,
     'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
 }
+# 'scrapy.downloadermiddlewares.retry.RetryMiddleware': 90,
+# 'scrapy_proxies.RandomProxy': 100,
+# 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110,
 SPIDER_MIDDLEWARES = {
     'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
 }
 DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
 HTTPCACHE_STORAGE = 'scrapy_splash.SplashAwareFSCacheStorage'
+
+# Proxy Settings
+# RETRY_TIMES = 10  # Retry many times since proxies often fail
+# # Retry on most error codes since proxies fail for different reasons
+# RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]
+# PROXY_LIST = 'C:\CS Studies\scraptingProject\proxies.txt'
+# PROXY_MODE = 0
 
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
@@ -72,18 +87,6 @@ DOWNLOAD_DELAY = 10
 # SPIDER_MIDDLEWARES = {
 #    "scraping.middlewares.ScrapingSpiderMiddleware": 543,
 # }
-
-# Enable or disable downloader middlewares
-# See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-# DOWNLOADER_MIDDLEWARES = {
-#     'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 400,
-#     'scrapy_proxies.RandomProxy': 410,
-#     'scrapy.downloadermiddlewares.retry.RetryMiddleware': 500,
-#     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-# }
-# # https://free-proxy-list.net/
-# PROXY_LIST = os.path.join(os.getcwd(), 'C:\CS Studies\scraptingProject\proxy_list.txt')
-# PROXY_MODE = 0
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html

@@ -1,7 +1,6 @@
-
 import scrapy
+
 from datetime import datetime, date, timedelta
-from scrapy.utils.project import get_project_settings
 from ..items import ArticleItem
 from scrapy_splash import SplashRequest
 

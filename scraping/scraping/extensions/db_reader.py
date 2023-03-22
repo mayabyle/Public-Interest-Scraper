@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 # import hebrew_parser
 from tabulate import tabulate
 
+from scraping.scraping.extensions import hebrew_parser
+
 
 def plot_topics_division(curr):
     curr.execute("""
@@ -81,13 +83,13 @@ def get_tags_count(curr):
     # plt.show()
 
 
-# def get_comments_data(curr, conn):
-#     # 5 most liked comments
-#     curr.execute("""SELECT * FROM ynet_comments ORDER BY likes DESC LIMIT 5""")
-#     results = curr.fetchall()
-#     print(tabulate(results, headers=['id', 'article', 'headline', 'text', 'likes', 'unlikes']))
-#     # most common words in comments (???)
-#     hebrew_parser.get_most_common_words_from_comments(conn)
+def get_comments_data(curr, conn, num1, num2):
+    # 5 most liked comments
+    # curr.execute("""SELECT * FROM ynet_comments ORDER BY likes DESC LIMIT ?""", (num1,))
+    # results = curr.fetchall()
+    # print(tabulate(results, headers=['id', 'article', 'headline', 'text', 'likes', 'unlikes']))
+    # most common words in comments (???)
+    hebrew_parser.get_most_common_words_from_comments(curr, num2)
 
 
 
@@ -98,8 +100,8 @@ def run():
     # plot_topics_division(curr)
     # get_comments_avg(curr)
     # get_top_commented_titles(curr, 10)
-    get_tags_count(curr)
-    # get_comments_data(curr, conn)
+    # get_tags_count(curr)
+    get_comments_data(curr, conn, 5, 5)
     conn.close()
 
 

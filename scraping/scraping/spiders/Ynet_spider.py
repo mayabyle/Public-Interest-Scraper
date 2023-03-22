@@ -2,12 +2,14 @@ import urllib, scrapy, json, re, requests
 
 from datetime import datetime, date, timedelta
 from scrapy.utils.project import get_project_settings
+from scrapy_splash import SplashRequest
+
 from ..items import ArticleItem, TagItem
 
 
-tags = ["המהפכה המשפטית"]
-# with open('C:/CS Studies/scraptingProject/scraping/tags.txt', 'r', encoding='utf-8') as f:
-#     tags = f.readlines()
+# tags = ["המהפכה המשפטית"]
+with open('C:/CS Studies/scraptingProject/scraping/tags.txt', 'r', encoding='utf-8') as f:
+    tags = f.readlines()
 urls = []
 for tag in tags:
     urls.append(f'https://ynet.co.il/topics/{tag}')
@@ -19,19 +21,20 @@ class YnetSpider(scrapy.Spider):
     start_urls = urls
 
     def parse(self, response):
+        if response.status != 200:
+            return
         item = TagItem()
         currTag = urllib.parse.unquote(response.url.split("/")[-1], encoding='utf-8')
-        links = response.xpath('.//div[@class="slotTitle"]/a/@href')
+        links = response.xpath('.//div[@class="slotTitle"]/a/@href').getall()
         dates = response.xpath('.//span[@class="dateView"]/text()')
 
         for i in range(len(links)):
             parsed_date = datetime.strptime(dates[i].get().strip(), '%d.%m.%y').date()
-            delta = date.today() - parsed_date
-            if delta > timedelta(days=0):  #74
+            if parsed_date <= datetime(2023, 3, 18).date():
                 break
             yield response.follow(links[i], callback=self.parse_article)
             # add the url and searched tag to tables
-            item['url'] = links[i].get()
+            item['url'] = links[i]
             item['date'] = parsed_date
             item['search_tag'] = currTag
             yield item
@@ -42,25 +45,21 @@ class YnetSpider(scrapy.Spider):
 
     def parse_article(self, response):
         item = ArticleItem()
-        comments = re.search(r'\d+', response.css('div.commentInfoText::text').get())
         item['source'] = 'Ynet'
         item['subject'] = response.css('ul li:last-child a::text').get()
         item['url'] = response.url
         item['title'] = response.css('h1.mainTitle::text').get()
         item['date'] = response.xpath('//span[@class="DateDisplay"]/@data-wcmdate').extract_first()[:10]
         item['tags'] = response.xpath('//div[@class="tagName"]/a/text()').getall()
-        item['comments_num'] = comments.group() if comments is not None else 0
-        if item['comments_num'] != 0:
-            item['comments'] = self.load_comments(response)
-        else:
-            item['comments'] = []
+        item['comments'] = self.load_comments(response)
+        item['comments_num'] = 0 if not item['comments'] else item['comments'][0]['number'] ##
         yield item
 
     def load_comments(self, response):
         i = 1
         comments = []
         unique_name = response.url.split("/")[-1]
-        headers = get_project_settings().get('DEFAULT_YNET_REQUEST_HEADERS').copy()  # Copy default headers
+        headers = get_project_settings().get('YNET_COMMENTS_REQUEST_HEADERS').copy()  # Copy default headers
         headers['Referer'] = response.url
 
         while True:
