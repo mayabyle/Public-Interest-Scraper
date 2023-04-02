@@ -47,7 +47,7 @@ def parse_comment(conn, curr, text, date):
 #     print(lemmas_count)
 
 
-def parse_comments_run(comments_curr, num):
+def parse(comments_curr, num):
     # Create SQL table:     todo add origin      TEXT,
     conn = sqlite3.connect('parsed_words.db')
     curr = conn.cursor()
