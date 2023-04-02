@@ -4,9 +4,9 @@ from datetime import datetime
 from scrapy.utils.project import get_project_settings
 from scraping.items import ArticleItem, TagItem
 
-tags = ["המהפכה המשפטית"]
-# with open('scraping/tags.txt', 'r', encoding='utf-8') as f:
-#     tags = f.readlines()
+# tags = ["המהפכה המשפטית"]
+with open('scraping/tags.txt', 'r', encoding='utf-8') as f:
+    tags = f.readlines()
 urls = []
 for tag in tags:
     urls.append(f'https://ynet.co.il/topics/{tag}')
