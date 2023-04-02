@@ -2,13 +2,11 @@ import urllib, scrapy, json, requests
 
 from datetime import datetime
 from scrapy.utils.project import get_project_settings
-
 from scraping.items import ArticleItem, TagItem
 
-
-# tags = ["המהפכה המשפטית"]
-with open('tags.txt', 'r', encoding='utf-8') as f:
-    tags = f.readlines()
+tags = ["המהפכה המשפטית"]
+# with open('scraping/tags.txt', 'r', encoding='utf-8') as f:
+#     tags = f.readlines()
 urls = []
 for tag in tags:
     urls.append(f'https://ynet.co.il/topics/{tag}')
@@ -20,8 +18,6 @@ class YnetSpider(scrapy.Spider):
     start_urls = urls
 
     def parse(self, response):
-        if response.status != 200:
-            return
         item = TagItem()
         currTag = urllib.parse.unquote(response.url.split("/")[-1], encoding='utf-8')
         links = response.xpath('.//div[@class="slotTitle"]/a/@href').getall()
@@ -29,7 +25,7 @@ class YnetSpider(scrapy.Spider):
 
         for i in range(len(links)):
             parsed_date = datetime.strptime(dates[i].get().strip(), '%d.%m.%y').date()
-            if parsed_date <= datetime(2023, 3, 18).date():
+            if parsed_date <= datetime(2023, 3, 25).date():
                 break
             yield response.follow(links[i], callback=self.parse_article)
             # add the url and searched tag to tables
@@ -43,6 +39,8 @@ class YnetSpider(scrapy.Spider):
             yield response.follow(next_page, callback=self.parse)
 
     def parse_article(self, response):
+        if response.status != 200:
+            return
         item = ArticleItem()
         item['source'] = 'Ynet'
         item['subject'] = response.css('ul li:last-child a::text').get()
@@ -51,7 +49,7 @@ class YnetSpider(scrapy.Spider):
         item['date'] = response.xpath('//span[@class="DateDisplay"]/@data-wcmdate').extract_first()[:10]
         item['tags'] = response.xpath('//div[@class="tagName"]/a/text()').getall()
         item['comments'] = self.load_comments(response)
-        item['comments_num'] = 0 if not item['comments'] else item['comments'][0]['number'] ##
+        item['comments_num'] = 0 if not item['comments'] else item['comments'][0]['number']  ##
         yield item
 
     def load_comments(self, response):
