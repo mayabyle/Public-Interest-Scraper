@@ -22,13 +22,9 @@ class N12Spider(scrapy.Spider):
                 parsed_date = datetime.strptime(dates[i].strip(), '%d.%m.%y').date()
             except ValueError:
                 parsed_date = date.today()
-            if parsed_date <= datetime(2023, 3, 18).date():
+            if parsed_date <= datetime(2023, 3, 31).date():
                 continue_page = False
                 continue
-            # delta = date.today() - parsed_date
-            # if delta > timedelta(days=0):
-            #     continue_page = False
-            #     continue
             links[i] = "http://www.mako.co.il"+links[i]
             yield SplashRequest(links[i], callback=self.parse_article, endpoint='render.html', args={'wait': 0.5})
 
