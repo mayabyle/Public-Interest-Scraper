@@ -1,16 +1,16 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+from scraping.spiders.N12_spider import N12Spider
+from scraping.spiders.Ynet_spider import YnetSpider
+from scrapy.utils.project import get_project_settings
+from scrapy.crawler import CrawlerProcess
+from scraping.extensions.db_reader import run
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    settings = get_project_settings()
+    process = CrawlerProcess(settings)
+    process.crawl(YnetSpider)
+    process.crawl(N12Spider)
+    process.start()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    reader = run()
+
