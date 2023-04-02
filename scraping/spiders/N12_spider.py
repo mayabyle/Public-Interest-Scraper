@@ -22,18 +22,26 @@ class N12Spider(scrapy.Spider):
                 parsed_date = datetime.strptime(dates[i].strip(), '%d.%m.%y').date()
             except ValueError:
                 parsed_date = date.today()
-            delta = date.today() - parsed_date
-            if delta > timedelta(days=0):
+            if parsed_date <= datetime(2023, 3, 18).date():
                 continue_page = False
                 continue
+            # delta = date.today() - parsed_date
+            # if delta > timedelta(days=0):
+            #     continue_page = False
+            #     continue
             links[i] = "http://www.mako.co.il"+links[i]
             yield SplashRequest(links[i], callback=self.parse_article, endpoint='render.html', args={'wait': 0.5})
 
         next_page = response.css('a.next::attr(href)').get()
         if next_page is not None and continue_page:
-            yield response.follow(next_page, callback=self.parse, endpoint='render.html')
+            yield response.follow(next_page, callback=self.parse, endpoint='render.html', errback=self.handle_error)
+
+    def handle_error(self, failure):
+        return
 
     def parse_article(self, response):
+        if response.status != 200:
+            return
         item = ArticleItem()
         item['source'] = 'N12'
         item['subject'] = response.css('span[itemprop="name"]::text')[-1].get()
